@@ -158,24 +158,35 @@ function SessionRow({
             <SessionBadge label="Attention" tone="danger" />
           ) : null}
         </View>
-        <View style={styles.rowMetaRow}>
-          <Text style={styles.sessionMetaText} numberOfLines={1}>
+        {isMobile && (
+          <View style={styles.rowMetaRow}>
+            <Text style={styles.sessionMetaText} numberOfLines={1}>
+              {projectPath}
+            </Text>
+            <Text style={styles.sessionMetaSeparator}>·</Text>
+            <Text style={styles.sessionMetaText}>{statusLabel}</Text>
+            <Text style={styles.sessionMetaSeparator}>·</Text>
+            <Text style={styles.sessionMetaText}>{timeAgo}</Text>
+            {agent.serverLabel ? (
+              <>
+                <Text style={styles.sessionMetaSeparator}>·</Text>
+                <Text style={styles.sessionMetaText} numberOfLines={1}>
+                  {agent.serverLabel}
+                </Text>
+              </>
+            ) : null}
+          </View>
+        )}
+      </View>
+      {!isMobile && (
+        <>
+          <Text style={styles.columnMeta} numberOfLines={1}>
             {projectPath}
           </Text>
-          <Text style={styles.sessionMetaSeparator}>·</Text>
-          <Text style={styles.sessionMetaText}>{statusLabel}</Text>
-          <Text style={styles.sessionMetaSeparator}>·</Text>
-          <Text style={styles.sessionMetaText}>{timeAgo}</Text>
-          {agent.serverLabel ? (
-            <>
-              <Text style={styles.sessionMetaSeparator}>·</Text>
-              <Text style={styles.sessionMetaText} numberOfLines={1}>
-                {agent.serverLabel}
-              </Text>
-            </>
-          ) : null}
-        </View>
-      </View>
+          <Text style={styles.columnMetaFixed}>{statusLabel}</Text>
+          <Text style={styles.columnMetaFixed}>{timeAgo}</Text>
+        </>
+      )}
       {isMobile && agent.requiresAttention ? (
         <View style={styles.rowTrailing}>
           <SessionBadge label="Attention" tone="danger" />
@@ -202,7 +213,6 @@ function SessionTableSection({
     <View style={styles.sectionBlock}>
       <View style={styles.sectionHeading}>
         <Text style={styles.sectionTitle}>{section.title}</Text>
-        <View style={styles.sectionLine} />
       </View>
 
       <View style={styles.listCard}>
@@ -422,22 +432,24 @@ const styles = StyleSheet.create((theme) => ({
   },
   sectionTitle: {
     fontSize: theme.fontSize.sm,
-    fontWeight: '600',
+    fontWeight: theme.fontWeight.medium,
     color: theme.colors.foregroundMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  sectionLine: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: theme.colors.surface2,
   },
   listCard: {
-    overflow: 'hidden',
-    borderRadius: theme.borderRadius.lg,
+    overflow: {
+      xs: 'hidden' as const,
+      md: 'visible' as const,
+    },
+    borderRadius: {
+      xs: theme.borderRadius.lg,
+      md: 0,
+    },
   },
   rowDivider: {
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: {
+      xs: StyleSheet.hairlineWidth,
+      md: 0,
+    },
     borderTopColor: theme.colors.border,
   },
   row: {
@@ -445,8 +457,14 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     paddingVertical: theme.spacing[2],
     paddingHorizontal: theme.spacing[3],
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing[1],
+    borderRadius: {
+      xs: theme.borderRadius.lg,
+      md: 0,
+    },
+    marginBottom: {
+      xs: theme.spacing[1],
+      md: 0,
+    },
   },
   rowLeading: {
     marginRight: theme.spacing[3],
@@ -500,6 +518,21 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.foregroundMuted,
     opacity: 0.7,
   },
+  columnMeta: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.foregroundMuted,
+    flexShrink: 1,
+    minWidth: 60,
+    maxWidth: 200,
+    marginLeft: theme.spacing[4],
+  },
+  columnMetaFixed: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.foregroundMuted,
+    flexShrink: 0,
+    width: 72,
+    textAlign: 'right' as const,
+  },
   badge: {
     paddingHorizontal: theme.spacing[2],
     paddingVertical: theme.spacing[1],
@@ -514,10 +547,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   badgeText: {
     fontSize: theme.fontSize.xs,
-    fontWeight: '600',
+    fontWeight: theme.fontWeight.medium,
     color: theme.colors.foregroundMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
   },
   badgeTextWarning: {
     color: theme.colors.palette.amber[500],

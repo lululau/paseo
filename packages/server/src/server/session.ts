@@ -137,6 +137,7 @@ import {
 import { createAgentWorktree, runAsyncWorktreeBootstrap } from './worktree-bootstrap.js'
 import {
   getCheckoutDiff,
+  getCheckoutShortstat,
   getCheckoutStatus,
   listBranchSuggestions,
   NotGitRepoError,
@@ -5253,6 +5254,13 @@ export class Session {
       // Fall back to the persisted label if checkout metadata is unavailable.
     }
 
+    let diffStat: { additions: number; deletions: number } | null = null
+    try {
+      diffStat = await getCheckoutShortstat(workspace.cwd)
+    } catch {
+      // Non-critical — leave null on failure.
+    }
+
     return {
       id: workspace.workspaceId,
       projectId: workspace.projectId,
@@ -5263,6 +5271,7 @@ export class Session {
       name: displayName,
       status: 'done',
       activityAt: null,
+      diffStat,
     }
   }
 

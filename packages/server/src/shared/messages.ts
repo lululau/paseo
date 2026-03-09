@@ -1490,6 +1490,10 @@ export const WorkspaceDescriptorPayloadSchema = z.object({
   name: z.string(),
   status: WorkspaceStateBucketSchema,
   activityAt: z.string().nullable(),
+  diffStat: z.object({
+    additions: z.number(),
+    deletions: z.number(),
+  }).nullable().optional(),
 })
 
 export const AgentUpdateMessageSchema = z.object({

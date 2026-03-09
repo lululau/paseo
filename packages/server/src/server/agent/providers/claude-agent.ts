@@ -1415,6 +1415,16 @@ export class ClaudeAgentClient implements AgentClient {
     } catch {
       this.claudePath = null;
     }
+    if (this.claudePath) {
+      try {
+        const version = execSync(`${this.claudePath} --version`, { encoding: "utf8" }).trim();
+        this.logger.info({ claudePath: this.claudePath, version }, "Resolved Claude binary");
+      } catch {
+        this.logger.info({ claudePath: this.claudePath }, "Resolved Claude binary (version unknown)");
+      }
+    } else {
+      this.logger.warn("Claude binary not found via 'which claude'; SDK will use bundled binary");
+    }
   }
 
   async createSession(config: AgentSessionConfig): Promise<AgentSession> {

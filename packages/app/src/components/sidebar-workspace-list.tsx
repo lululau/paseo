@@ -23,7 +23,8 @@ import {
 import { router, usePathname } from 'expo-router'
 import { StyleSheet, UnistylesRuntime, useUnistyles } from 'react-native-unistyles'
 import { type GestureType } from 'react-native-gesture-handler'
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react-native'
+import * as Clipboard from 'expo-clipboard'
+import { ChevronDown, ChevronRight, MoreVertical, Plus } from 'lucide-react-native'
 import { NestableScrollContainer } from 'react-native-draggable-flatlist'
 import { DraggableList, type DraggableRenderItemInfo } from './draggable-list'
 import type { DraggableListDragHandleProps } from './draggable-list.types'
@@ -50,6 +51,12 @@ import {
   ContextMenuTrigger,
   useContextMenu,
 } from '@/components/ui/context-menu'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { SyncedLoader } from '@/components/synced-loader'
 import { useToast } from '@/contexts/toast-context'
 import { useCheckoutGitActionsStore } from '@/stores/checkout-git-actions-store'
@@ -112,6 +119,11 @@ interface WorkspaceRowInnerProps {
   isArchiving: boolean
   dragHandleProps?: DraggableListDragHandleProps
   menuController: ReturnType<typeof useContextMenu> | null
+  archiveLabel?: string
+  archiveStatus?: 'idle' | 'pending' | 'success'
+  archivePendingLabel?: string
+  onArchive?: () => void
+  onCopyPath?: () => void
 }
 
 function resolveWorkspaceCreatedAtLabel(workspace: SidebarWorkspaceEntry): string | null {
@@ -601,7 +613,13 @@ function WorkspaceRowInner({
   isArchiving,
   dragHandleProps,
   menuController,
+  archiveLabel,
+  archiveStatus = 'idle',
+  archivePendingLabel,
+  onArchive,
+  onCopyPath,
 }: WorkspaceRowInnerProps) {
+  const { theme } = useUnistyles()
   const createdAtLabel = resolveWorkspaceCreatedAtLabel(workspace)
   const interaction = useLongPressDragInteraction({
     drag,
@@ -617,83 +635,89 @@ function WorkspaceRowInner({
     onPress()
   }, [interaction.didLongPressRef, onPress])
 
-  const rowChildren = (
-    <>
-      <View
-        {...(dragHandleProps?.attributes as any)}
-        {...(dragHandleProps?.listeners as any)}
-        ref={dragHandleProps?.setActivatorNodeRef as any}
-        style={styles.workspaceRowLeft}
-      >
-        <WorkspaceStatusIndicator bucket={workspace.statusBucket} loading={isArchiving} />
-        <Text style={styles.workspaceBranchText} numberOfLines={1}>
-          {workspace.name}
-        </Text>
-      </View>
-      <View style={styles.workspaceRowRight}>
-        {createdAtLabel ? (
-          <Text style={styles.workspaceCreatedAtText} numberOfLines={1}>
-            {createdAtLabel}
-          </Text>
-        ) : null}
-        {showShortcutBadge && shortcutNumber !== null ? (
-          <View style={styles.shortcutBadge}>
-            <Text style={styles.shortcutBadgeText}>{shortcutNumber}</Text>
-          </View>
-        ) : null}
-      </View>
-    </>
-  )
-
-  const trigger = menuController ? (
-    <ContextMenuTrigger
-      enabledOnMobile={false}
-      disabled={isArchiving}
-      style={({ pressed, hovered = false }) => [
-        styles.workspaceRow,
-        isDragging && styles.workspaceRowDragging,
-        selected && styles.sidebarRowSelected,
-        hovered && styles.workspaceRowHovered,
-        pressed && styles.workspaceRowPressed,
-      ]}
-      onPressIn={interaction.handlePressIn}
-      onTouchMove={interaction.handleTouchMove}
-      onPressOut={interaction.handlePressOut}
-      onPress={handlePress}
-      testID={`sidebar-workspace-row-${workspace.workspaceKey}`}
-    >
-      {rowChildren}
-    </ContextMenuTrigger>
-  ) : (
-    <Pressable
-      disabled={isArchiving}
-      style={({ pressed, hovered = false }) => [
-        styles.workspaceRow,
-        isDragging && styles.workspaceRowDragging,
-        selected && styles.sidebarRowSelected,
-        hovered && styles.workspaceRowHovered,
-        pressed && styles.workspaceRowPressed,
-      ]}
-      onPressIn={interaction.handlePressIn}
-      onTouchMove={interaction.handleTouchMove}
-      onPressOut={interaction.handlePressOut}
-      onPress={handlePress}
-      testID={`sidebar-workspace-row-${workspace.workspaceKey}`}
-    >
-      {rowChildren}
-    </Pressable>
-  )
-
-  const content = trigger
-
   return (
     <View style={styles.workspaceRowContainer}>
-      {content}
+      <Pressable
+        disabled={isArchiving}
+        style={({ pressed, hovered = false }) => [
+          styles.workspaceRow,
+          isDragging && styles.workspaceRowDragging,
+          selected && styles.sidebarRowSelected,
+          hovered && styles.workspaceRowHovered,
+          pressed && styles.workspaceRowPressed,
+        ]}
+        onPressIn={interaction.handlePressIn}
+        onTouchMove={interaction.handleTouchMove}
+        onPressOut={interaction.handlePressOut}
+        onPress={handlePress}
+        testID={`sidebar-workspace-row-${workspace.workspaceKey}`}
+      >
+        <View
+          {...(dragHandleProps?.attributes as any)}
+          {...(dragHandleProps?.listeners as any)}
+          ref={dragHandleProps?.setActivatorNodeRef as any}
+          style={styles.workspaceRowLeft}
+        >
+          <WorkspaceStatusIndicator bucket={workspace.statusBucket} loading={isArchiving} />
+          <Text style={styles.workspaceBranchText} numberOfLines={1}>
+            {workspace.name}
+          </Text>
+        </View>
+        <View style={styles.workspaceRowRight}>
+          {workspace.diffStat ? (
+            <View style={styles.diffStatRow}>
+              <Text style={styles.diffStatAdditions}>+{workspace.diffStat.additions}</Text>
+              <Text style={styles.diffStatDeletions}>-{workspace.diffStat.deletions}</Text>
+            </View>
+          ) : createdAtLabel ? (
+            <Text style={styles.workspaceCreatedAtText} numberOfLines={1}>
+              {createdAtLabel}
+            </Text>
+          ) : null}
+          {showShortcutBadge && shortcutNumber !== null ? (
+            <View style={styles.shortcutBadge}>
+              <Text style={styles.shortcutBadgeText}>{shortcutNumber}</Text>
+            </View>
+          ) : null}
+          {onArchive ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                hitSlop={8}
+                style={styles.kebabButton}
+                accessibilityRole="button"
+                accessibilityLabel="Workspace actions"
+                testID={`sidebar-workspace-kebab-${workspace.workspaceKey}`}
+              >
+                <MoreVertical size={14} color={theme.colors.foregroundMuted} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" width={200}>
+                {onCopyPath ? (
+                  <DropdownMenuItem
+                    testID={`sidebar-workspace-menu-copy-path-${workspace.workspaceKey}`}
+                    onSelect={onCopyPath}
+                  >
+                    Copy path
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem
+                  testID={`sidebar-workspace-menu-archive-${workspace.workspaceKey}`}
+                  status={archiveStatus}
+                  pendingLabel={archivePendingLabel}
+                  destructive
+                  onSelect={onArchive}
+                >
+                  {archiveLabel ?? 'Archive'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+        </View>
+      </Pressable>
     </View>
   )
 }
 
-function WorkspaceRowWithMenuContent({
+function WorkspaceRowWithMenu({
   workspace,
   selected,
   shortcutNumber,
@@ -713,7 +737,6 @@ function WorkspaceRowWithMenuContent({
   dragHandleProps?: DraggableListDragHandleProps
 }) {
   const toast = useToast()
-  const contextMenu = useContextMenu()
   const archiveWorktree = useCheckoutGitActionsStore((state) => state.archiveWorktree)
   const [isArchivingWorkspace, setIsArchivingWorkspace] = useState(false)
   const archiveStatus = useCheckoutGitActionsStore((state) =>
@@ -792,72 +815,29 @@ function WorkspaceRowWithMenuContent({
     })()
   }, [isArchivingWorkspace, toast, workspace.name, workspace.serverId, workspace.workspaceId])
 
-  return (
-    <>
-      <WorkspaceRowInner
-        workspace={workspace}
-        selected={selected}
-        shortcutNumber={shortcutNumber}
-        showShortcutBadge={showShortcutBadge}
-        onPress={onPress}
-        drag={drag}
-        isDragging={isDragging}
-        isArchiving={isArchiving}
-        dragHandleProps={dragHandleProps}
-        menuController={contextMenu}
-      />
-      <ContextMenuContent
-        align="start"
-        width={220}
-        mobileMode="sheet"
-        testID={`sidebar-workspace-context-${workspace.workspaceKey}`}
-      >
-        <ContextMenuItem
-          testID={`sidebar-workspace-context-${workspace.workspaceKey}-archive`}
-          status={isWorktree ? archiveStatus : isArchivingWorkspace ? 'pending' : 'idle'}
-          pendingLabel={isWorktree ? 'Archiving...' : 'Hiding...'}
-          destructive
-          onSelect={isWorktree ? handleArchiveWorktree : handleArchiveWorkspace}
-        >
-          {isWorktree ? 'Archive worktree' : 'Hide from sidebar'}
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </>
-  )
-}
+  const handleCopyPath = useCallback(() => {
+    void Clipboard.setStringAsync(workspace.workspaceId)
+    toast.copied('Path copied')
+  }, [toast, workspace.workspaceId])
 
-function WorkspaceRowWithMenu({
-  workspace,
-  selected,
-  shortcutNumber,
-  showShortcutBadge,
-  onPress,
-  drag,
-  isDragging,
-  dragHandleProps,
-}: {
-  workspace: SidebarWorkspaceEntry
-  selected: boolean
-  shortcutNumber: number | null
-  showShortcutBadge: boolean
-  onPress: () => void
-  drag: () => void
-  isDragging: boolean
-  dragHandleProps?: DraggableListDragHandleProps
-}) {
   return (
-    <ContextMenu>
-      <WorkspaceRowWithMenuContent
-        workspace={workspace}
-        selected={selected}
-        shortcutNumber={shortcutNumber}
-        showShortcutBadge={showShortcutBadge}
-        onPress={onPress}
-        drag={drag}
-        isDragging={isDragging}
-        dragHandleProps={dragHandleProps}
-      />
-    </ContextMenu>
+    <WorkspaceRowInner
+      workspace={workspace}
+      selected={selected}
+      shortcutNumber={shortcutNumber}
+      showShortcutBadge={showShortcutBadge}
+      onPress={onPress}
+      drag={drag}
+      isDragging={isDragging}
+      isArchiving={isArchiving}
+      dragHandleProps={dragHandleProps}
+      menuController={null}
+      archiveLabel={isWorktree ? 'Archive worktree' : 'Hide from sidebar'}
+      archiveStatus={isWorktree ? archiveStatus : isArchivingWorkspace ? 'pending' : 'idle'}
+      archivePendingLabel={isWorktree ? 'Archiving...' : 'Hiding...'}
+      onArchive={isWorktree ? handleArchiveWorktree : handleArchiveWorkspace}
+      onCopyPath={handleCopyPath}
+    />
   )
 }
 
@@ -1750,6 +1730,27 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.foregroundMuted,
     fontSize: theme.fontSize.xs,
     flexShrink: 0,
+  },
+  diffStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 0,
+  },
+  diffStatAdditions: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.normal,
+    color: theme.colors.palette.green[400],
+  },
+  diffStatDeletions: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.normal,
+    color: theme.colors.palette.red[500],
+  },
+  kebabButton: {
+    padding: 2,
+    borderRadius: 4,
+    marginLeft: 2,
   },
   shortcutBadge: {
     minWidth: 18,

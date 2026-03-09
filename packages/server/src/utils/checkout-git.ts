@@ -1087,6 +1087,77 @@ export async function getCheckoutStatusLite(
   };
 }
 
+export interface CheckoutShortstat {
+  additions: number;
+  deletions: number;
+}
+
+export async function getCheckoutShortstat(
+  cwd: string,
+  context?: CheckoutContext
+): Promise<CheckoutShortstat | null> {
+  try {
+    await requireGitRepo(cwd);
+  } catch {
+    return null;
+  }
+
+  const configured = await getConfiguredBaseRefForCwd(cwd, context);
+  const baseRef = configured.baseRef ?? (await resolveBaseRef(cwd));
+  if (!baseRef) {
+    return null;
+  }
+
+  const currentBranch = await getCurrentBranch(cwd);
+  if (currentBranch === baseRef) {
+    return null;
+  }
+
+  let mergeBase: string;
+  try {
+    const { stdout } = await execAsync(`git merge-base HEAD ${baseRef}`, {
+      cwd,
+      env: READ_ONLY_GIT_ENV,
+    });
+    mergeBase = stdout.trim();
+    if (!mergeBase) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  try {
+    const { stdout } = await execAsync(`git diff --shortstat ${mergeBase}`, {
+      cwd,
+      env: READ_ONLY_GIT_ENV,
+    });
+    const text = stdout.trim();
+    if (!text) {
+      return null;
+    }
+
+    let additions = 0;
+    let deletions = 0;
+    const addMatch = text.match(/(\d+)\s+insertion/);
+    if (addMatch) {
+      additions = Number.parseInt(addMatch[1]!, 10);
+    }
+    const delMatch = text.match(/(\d+)\s+deletion/);
+    if (delMatch) {
+      deletions = Number.parseInt(delMatch[1]!, 10);
+    }
+
+    if (additions === 0 && deletions === 0) {
+      return null;
+    }
+
+    return { additions, deletions };
+  } catch {
+    return null;
+  }
+}
+
 export async function getCheckoutDiff(
   cwd: string,
   compare: CheckoutDiffCompare,

@@ -33,6 +33,7 @@ function workspace(
     name: input.name,
     status: input.status,
     activityAt: input.activityAt,
+    diffStat: null,
   }
 }
 
