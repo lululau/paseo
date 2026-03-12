@@ -3070,6 +3070,9 @@ export class CodexAppServerAgentClient implements AgentClient {
 
   private spawnAppServer(): ChildProcessWithoutNullStreams {
     const launchPrefix = resolveCodexLaunchPrefix(this.runtimeSettings);
+    this.logger.trace({
+      launchPrefix
+    }, "Spawning Codex app server");
     return spawn(launchPrefix.command, [...launchPrefix.args, "app-server"], {
       stdio: ["pipe", "pipe", "pipe"],
       env: applyProviderEnv(process.env, this.runtimeSettings),
