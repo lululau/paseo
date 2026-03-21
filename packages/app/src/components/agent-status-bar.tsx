@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { View, Text, Platform, Pressable } from "react-native";
+import { View, Text, Platform, Pressable, Keyboard } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Brain, ChevronDown, ShieldAlert, ShieldCheck, ShieldOff } from "lucide-react-native";
 import { getProviderIcon } from "@/components/provider-icons";
@@ -427,7 +427,10 @@ function ControlledStatusBar({
       ) : (
         <>
           <Pressable
-            onPress={() => setPrefsOpen(true)}
+            onPress={() => {
+              Keyboard.dismiss();
+              setPrefsOpen(true);
+            }}
             style={({ pressed }) => [styles.prefsButton, pressed && styles.prefsButtonPressed]}
             accessibilityRole="button"
             accessibilityLabel="Agent preferences"
@@ -443,6 +446,7 @@ function ControlledStatusBar({
             title="Preferences"
             visible={prefsOpen}
             onClose={() => setPrefsOpen(false)}
+            stackBehavior="replace"
             testID="agent-preferences-sheet"
           >
             {providerOptions && providerOptions.length > 0 ? (

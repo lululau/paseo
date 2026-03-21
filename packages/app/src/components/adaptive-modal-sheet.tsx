@@ -101,6 +101,7 @@ export interface AdaptiveModalSheetProps {
   onClose: () => void;
   children: ReactNode;
   snapPoints?: string[];
+  stackBehavior?: "push" | "switch" | "replace";
   testID?: string;
 }
 
@@ -110,6 +111,7 @@ export function AdaptiveModalSheet({
   onClose,
   children,
   snapPoints,
+  stackBehavior,
   testID,
 }: AdaptiveModalSheetProps) {
   const { theme } = useUnistyles();
@@ -159,6 +161,7 @@ export function AdaptiveModalSheet({
         onChange={handleSheetChange}
         backdropComponent={renderBackdrop}
         enablePanDownToClose
+        stackBehavior={stackBehavior}
         backgroundComponent={SheetBackground}
         handleIndicatorStyle={styles.bottomSheetHandle}
         keyboardBehavior="extend"
