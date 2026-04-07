@@ -3,40 +3,38 @@
 ## 0.1.50 - 2026-04-07
 
 ### Added
-- Context window meter — live token usage indicator for Claude Code, Codex, and OpenCode shows how much of the context window has been consumed, with color thresholds at 70% and 90%.
-- Open in editor — open the current workspace directory in Cursor, VS Code, Zed, or the system file manager directly from the toolbar. Remembers your preferred editor.
-- Side-by-side diff layout — toggle between unified and split-column diff views in the Changes pane, with a whitespace visibility toggle.
-- Spoken messages — voice-mode speak tool calls now render inline in the conversation as labeled spoken messages instead of raw tool call blocks.
-- Plan approval actions — plan permission cards now show provider-defined action buttons (e.g. "Implement", "Deny") instead of hardcoded accept/reject.
-- Background git fetch — the daemon periodically fetches from origin so the Changes pane shows accurate ahead/behind counts without manual refreshes.
+- Context window meter — see how much of the context window your agent has used, with color thresholds at 70% and 90%. Works with Claude Code, Codex, and OpenCode.
+- Open in editor — jump from any workspace straight into Cursor, VS Code, Zed, or your file manager. Paseo remembers your choice.
+- Side-by-side diffs — toggle between unified and split-column diff views, with a whitespace visibility option.
+- Spoken messages — when using voice mode, agent speech now appears as regular messages in the conversation instead of raw tool output.
+- Plan actions — plan cards now show the actions your agent supports (e.g. "Implement", "Deny") instead of generic accept/reject buttons.
+- Background git fetch — ahead/behind counts in the Changes pane stay up to date automatically.
 
 ### Improved
-- File explorer and diff pane expanded/collapsed state persists across tab switches and rehydration.
-- Workspace list and updates are served instantly on connect; reconciliation happens in the background, eliminating the initial loading delay.
-- Provider list in Settings now includes a Refresh button and shows inline error details.
-- Workspace tabs close optimistically — the tab disappears immediately while the daemon archives the agent in the background.
-- Reload agent action moved away from the close button to prevent accidental taps.
+- Workspaces load instantly on connect instead of waiting for a full sync.
+- File explorer and diff pane remember which folders are expanded when you switch tabs.
+- Closing a workspace tab is now instant.
+- Settings shows a Refresh button for providers and displays error details inline.
+- Reload agent moved away from the close button to prevent accidental taps.
 
 ### Fixed
-- WorkingIndicator no longer remounts on every stream update on native.
-- Silero VAD state is now reset between voice turns, preventing LSTM drift that could cause false speech detections in long sessions.
-- OpenCode context window meter updates correctly after the first turn.
-- Garbled overlapping text in plan card markdown.
-- Worktree branch tracking now prefers `origin/{branch}` over the local branch ref, fixing stale diff baselines.
-- Session ID reset on query restart prevents an overwrite crash when restarting an agent quickly.
-- Copilot ACP permission prompts are now bypassed in autopilot mode.
-- Direct connection and pairing modal content now displays correctly on tablets.
-- `wait_for_finish` errors from agents are now surfaced to the caller instead of silently swallowed.
-- Workspace diff stats preserved across rehydration instead of resetting to zero.
-- Diff toolbar toggle buttons polished for consistent sizing and alignment.
+- Voice mode no longer drifts into false speech detection during long sessions.
+- OpenCode context window meter now updates after the first turn.
+- Garbled overlapping text on plan cards.
+- Changes pane could show stale diffs when working with git worktrees.
+- Restarting an agent quickly could crash the session.
+- Copilot no longer pauses for permission prompts in autopilot mode.
+- Connection and pairing dialogs now display correctly on tablets.
+- Orchestration errors from agents are now surfaced instead of silently lost.
+- Diff stats no longer reset to zero when reconnecting.
+- Diff toolbar buttons have consistent sizing.
 
 ## 0.1.49 - 2026-04-07
 
 ### Fixed
-- Models and providers now load reliably on first app connect instead of requiring a second status refresh.
-- Model picker on running agents now only shows models from the agent's own provider, not every provider on the server.
-- Model data is now prefetched consistently regardless of which screen you open first.
-- Draft and running-agent flows now share the same provider data path, eliminating stale model lists from legacy fallbacks.
+- Models and providers now load reliably on first connect instead of requiring a manual refresh.
+- Model picker only shows models from the agent's own provider, not every provider on the server.
+- Model lists stay consistent regardless of which screen you open first.
 
 ## 0.1.48 - 2026-04-05
 
