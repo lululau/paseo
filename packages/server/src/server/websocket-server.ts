@@ -13,6 +13,7 @@ import type { LoopService } from "./loop-service.js";
 import type { ScheduleService } from "./schedule/service.js";
 import type { CheckoutDiffManager, CheckoutDiffMetrics } from "./checkout-diff-manager.js";
 import { BackgroundGitFetchManager } from "./background-git-fetch-manager.js";
+import type { DaemonConfigStore, MutableDaemonConfig } from "./daemon-config-store.js";
 import {
   type ServerInfoStatusPayload,
   type WSHelloMessage,
@@ -239,6 +240,7 @@ export class VoiceAssistantWebSocketServer {
   private readonly backgroundGitFetchManager: BackgroundGitFetchManager;
   private readonly downloadTokenStore: DownloadTokenStore;
   private readonly paseoHome: string;
+  private readonly daemonConfigStore: DaemonConfigStore;
   private readonly pushTokenStore: PushTokenStore;
   private readonly pushService: PushService;
   private readonly mcpBaseUrl: string | null;
@@ -276,6 +278,7 @@ export class VoiceAssistantWebSocketServer {
   private readonly requestLatencies = new Map<string, number[]>();
   private runtimeMetricsInterval: ReturnType<typeof setInterval> | null = null;
   private unsubscribeSpeechReadiness: (() => void) | null = null;
+  private unsubscribeDaemonConfigChange: (() => void) | null = null;
 
   constructor(
     server: HTTPServer,
@@ -285,6 +288,7 @@ export class VoiceAssistantWebSocketServer {
     agentStorage: AgentStorage,
     downloadTokenStore: DownloadTokenStore,
     paseoHome: string,
+    daemonConfigStore: DaemonConfigStore,
     mcpBaseUrl: string | null,
     wsConfig: WebSocketServerConfig,
     speech?: SpeechService | null,
@@ -333,6 +337,7 @@ export class VoiceAssistantWebSocketServer {
     });
     this.downloadTokenStore = downloadTokenStore;
     this.paseoHome = paseoHome;
+    this.daemonConfigStore = daemonConfigStore;
     this.mcpBaseUrl = mcpBaseUrl;
     this.speech = speech ?? null;
     this.terminalManager = terminalManager ?? null;
@@ -352,6 +357,9 @@ export class VoiceAssistantWebSocketServer {
     this.unsubscribeSpeechReadiness = this.speech?.onReadinessChange((snapshot) => {
       this.publishSpeechReadiness(snapshot);
     }) ?? null;
+    this.unsubscribeDaemonConfigChange = this.daemonConfigStore.onChange((config) => {
+      this.broadcastDaemonConfigChanged(config);
+    });
 
     const pushLogger = this.logger.child({ module: "push" });
     this.pushTokenStore = new PushTokenStore(pushLogger, join(paseoHome, "push-tokens.json"));
@@ -442,6 +450,8 @@ export class VoiceAssistantWebSocketServer {
   public async close(): Promise<void> {
     this.unsubscribeSpeechReadiness?.();
     this.unsubscribeSpeechReadiness = null;
+    this.unsubscribeDaemonConfigChange?.();
+    this.unsubscribeDaemonConfigChange = null;
     if (this.runtimeMetricsInterval) {
       clearInterval(this.runtimeMetricsInterval);
       this.runtimeMetricsInterval = null;
@@ -637,6 +647,7 @@ export class VoiceAssistantWebSocketServer {
       scheduleService: this.scheduleService,
       checkoutDiffManager: this.checkoutDiffManager,
       backgroundGitFetchManager: this.backgroundGitFetchManager,
+      daemonConfigStore: this.daemonConfigStore,
       mcpBaseUrl: this.mcpBaseUrl,
       stt: () => this.speech?.resolveStt() ?? null,
       tts: () => this.speech?.resolveTts() ?? null,
@@ -802,8 +813,22 @@ export class VoiceAssistantWebSocketServer {
     };
   }
 
+  private createDaemonConfigChangedMessage(config: MutableDaemonConfig): WSOutboundMessage {
+    return wrapSessionMessage({
+      type: "status",
+      payload: {
+        status: "daemon_config_changed",
+        config,
+      },
+    });
+  }
+
   private broadcastCapabilitiesUpdate(): void {
     this.broadcast(this.createServerInfoMessage());
+  }
+
+  private broadcastDaemonConfigChanged(config: MutableDaemonConfig): void {
+    this.broadcast(this.createDaemonConfigChangedMessage(config));
   }
 
   private bindSocketHandlers(ws: WebSocketLike): void {

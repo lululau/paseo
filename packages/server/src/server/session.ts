@@ -68,6 +68,7 @@ import { experimental_createMCPClient } from "ai";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { VoiceCallerContext, VoiceSpeakHandler } from "./voice-types.js";
 import { BackgroundGitFetchManager } from "./background-git-fetch-manager.js";
+import type { DaemonConfigStore } from "./daemon-config-store.js";
 
 import { buildProviderRegistry } from "./agent/provider-registry.js";
 import type { AgentProviderRuntimeSettingsMap } from "./agent/provider-launch-config.js";
@@ -415,6 +416,7 @@ export type SessionOptions = {
   loopService: LoopService;
   checkoutDiffManager: CheckoutDiffManager;
   backgroundGitFetchManager: BackgroundGitFetchManager;
+  daemonConfigStore: DaemonConfigStore;
   mcpBaseUrl?: string | null;
   stt: Resolvable<SpeechToTextProvider | null>;
   tts: Resolvable<TextToSpeechProvider | null>;
@@ -597,6 +599,7 @@ export class Session {
   private readonly loopService: LoopService;
   private readonly checkoutDiffManager: CheckoutDiffManager;
   private readonly backgroundGitFetchManager: BackgroundGitFetchManager;
+  private readonly daemonConfigStore: DaemonConfigStore;
   private readonly mcpBaseUrl: string | null;
   private readonly downloadTokenStore: DownloadTokenStore;
   private readonly pushTokenStore: PushTokenStore;
@@ -661,6 +664,7 @@ export class Session {
       loopService,
       checkoutDiffManager,
       backgroundGitFetchManager,
+      daemonConfigStore,
       mcpBaseUrl,
       stt,
       tts,
@@ -689,6 +693,7 @@ export class Session {
     this.loopService = loopService;
     this.checkoutDiffManager = checkoutDiffManager;
     this.backgroundGitFetchManager = backgroundGitFetchManager;
+    this.daemonConfigStore = daemonConfigStore;
     this.mcpBaseUrl = mcpBaseUrl ?? null;
     this.terminalManager = terminalManager;
     this.providerSnapshotManager = providerSnapshotManager ?? null;
@@ -1609,6 +1614,26 @@ export class Session {
 
         case "wait_for_finish_request":
           await this.handleWaitForFinish(msg.agentId, msg.requestId, msg.timeoutMs);
+          break;
+
+        case "get_daemon_config_request":
+          this.emit({
+            type: "get_daemon_config_response",
+            payload: {
+              requestId: msg.requestId,
+              config: this.daemonConfigStore.get(),
+            },
+          });
+          break;
+
+        case "set_daemon_config_request":
+          this.emit({
+            type: "set_daemon_config_response",
+            payload: {
+              requestId: msg.requestId,
+              config: this.daemonConfigStore.patch(msg.config),
+            },
+          });
           break;
 
         case "dictation_stream_start":
