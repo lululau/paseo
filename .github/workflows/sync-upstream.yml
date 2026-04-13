@@ -69,6 +69,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      new_tag: ${{ needs.check-new-release.outputs.new_tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -155,7 +157,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: release/${{ needs.check-new-release.outputs.new_tag }}
+          ref: release/${{ needs.create-version-branch.outputs.new_tag }}
 
       - uses: actions/setup-node@v4
         with:
