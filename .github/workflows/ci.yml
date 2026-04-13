@@ -38,10 +38,10 @@ jobs:
         run: npm install
 
       - name: Build highlight dependency
-        run: npm run build --workspace=@getpaseo/highlight
+        run: npm run build --workspace=@lululau/paseo-highlight
 
       - name: Build relay dependency
-        run: npm run build --workspace=@getpaseo/relay
+        run: npm run build --workspace=@lululau/paseo-relay
 
       - name: Typecheck all packages
         run: npm run typecheck
@@ -65,13 +65,13 @@ jobs:
         run: npm install
 
       - name: Build highlight dependency
-        run: npm run build --workspace=@getpaseo/highlight
+        run: npm run build --workspace=@lululau/paseo-highlight
 
       - name: Build relay dependency
-        run: npm run build --workspace=@getpaseo/relay
+        run: npm run build --workspace=@lululau/paseo-relay
 
       - name: Run server tests
-        run: npm run test --workspace=@getpaseo/server
+        run: npm run test --workspace=@lululau/paseo-server
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -90,10 +90,10 @@ jobs:
         run: npm install
 
       - name: Build highlight dependency
-        run: npm run build --workspace=@getpaseo/highlight
+        run: npm run build --workspace=@lululau/paseo-highlight
 
       - name: Run app unit tests
-        run: npm run test --workspace=@getpaseo/app
+        run: npm run test --workspace=@lululau/paseo-app
 
   playwright:
     runs-on: ubuntu-latest
@@ -112,19 +112,19 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Build highlight dependency
-        run: npm run build --workspace=@getpaseo/highlight
+        run: npm run build --workspace=@lululau/paseo-highlight
 
       - name: Build relay dependency
-        run: npm run build --workspace=@getpaseo/relay
+        run: npm run build --workspace=@lululau/paseo-relay
 
       - name: Build server dependency
-        run: npm run build --workspace=@getpaseo/server
+        run: npm run build --workspace=@lululau/paseo-server
 
       - name: Install agent CLIs for provider tests
         run: npm install -g @openai/codex@0.105.0 opencode-ai
 
       - name: Run Playwright E2E tests
-        run: npm run test:e2e --workspace=@getpaseo/app
+        run: npm run test:e2e --workspace=@lululau/paseo-app
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
@@ -152,10 +152,10 @@ jobs:
         run: npm install
 
       - name: Build relay
-        run: npm run build --workspace=@getpaseo/relay
+        run: npm run build --workspace=@lululau/paseo-relay
 
       - name: Run relay tests
-        run: npm run test --workspace=@getpaseo/relay
+        run: npm run test --workspace=@lululau/paseo-relay
 
   cli-tests:
     runs-on: ubuntu-latest
@@ -174,10 +174,10 @@ jobs:
         run: npm install -g @openai/codex@0.105.0 opencode-ai
 
       - name: Build highlight dependency
-        run: npm run build --workspace=@getpaseo/highlight
+        run: npm run build --workspace=@lululau/paseo-highlight
 
       - name: Run CLI tests
-        run: npm run test --workspace=@getpaseo/cli
+        run: npm run test --workspace=@lululau/paseo-cli
         env:
           PASEO_LOCAL_SPEECH_AUTO_DOWNLOAD: '0'
           PASEO_DICTATION_ENABLED: '0'
