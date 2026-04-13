@@ -101,23 +101,13 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-
-      - name: Rewrite lock file resolved URLs to npmjs.com
-        run: |
-          node -e "
-            const fs = require('fs');
-            const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
-            const pkgs = lock.packages || {};
-            for (const [path, info] of Object.entries(pkgs)) {
-              if (info.resolved && info.resolved.includes('npm.pkg.github.com')) {
-                info.resolved = info.resolved.replace('npm.pkg.github.com', 'registry.npmjs.org');
-              }
-            }
-            fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
-          "
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@lululau'
 
       - name: Install JS dependencies
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set desktop package version from tag
         shell: bash
@@ -287,23 +277,13 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-
-      - name: Rewrite lock file resolved URLs to npmjs.com
-        run: |
-          node -e "
-            const fs = require('fs');
-            const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
-            const pkgs = lock.packages || {};
-            for (const [path, info] of Object.entries(pkgs)) {
-              if (info.resolved && info.resolved.includes('npm.pkg.github.com')) {
-                info.resolved = info.resolved.replace('npm.pkg.github.com', 'registry.npmjs.org');
-              }
-            }
-            fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
-          "
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@lululau'
 
       - name: Install JS dependencies
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set desktop package version from tag
         shell: bash
@@ -364,23 +344,13 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-
-      - name: Rewrite lock file resolved URLs to npmjs.com
-        run: |
-          node -e "
-            const fs = require('fs');
-            const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
-            const pkgs = lock.packages || {};
-            for (const [path, info] of Object.entries(pkgs)) {
-              if (info.resolved && info.resolved.includes('npm.pkg.github.com')) {
-                info.resolved = info.resolved.replace('npm.pkg.github.com', 'registry.npmjs.org');
-              }
-            }
-            fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
-          "
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@lululau'
 
       - name: Install JS dependencies
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set desktop package version from tag
         shell: bash
