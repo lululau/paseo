@@ -177,21 +177,25 @@ jobs:
 
       - name: Publish @lululau/paseo-highlight
         run: npm publish --workspace=@lululau/paseo-highlight --access public
+        continue-on-error: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @lululau/paseo-relay
         run: npm publish --workspace=@lululau/paseo-relay --access public
+        continue-on-error: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @lululau/paseo-server
         run: npm publish --workspace=@lululau/paseo-server --access public
+        continue-on-error: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @lululau/paseo-cli
         run: npm publish --workspace=@lululau/paseo-cli --access public
+        continue-on-error: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
