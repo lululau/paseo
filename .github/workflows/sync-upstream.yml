@@ -44,7 +44,7 @@ jobs:
             git fetch --tags "$UPSTREAM_URL"
 
             # Get latest non-prerelease v* tag
-            TAG=$(git tag -l 'v*' --sort=-v:refname | grep -v -E '-(rc|alpha|beta)' | head -1)
+            TAG=$(git tag -l 'v*' --sort=-v:refname | grep -v -E -- '-(rc|alpha|beta)' | head -1)
 
             if [ -z "$TAG" ]; then
               echo "No upstream release tags found"
@@ -123,8 +123,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm install --package-lock-only
+      - run: |
+          rm -f package-lock.json
+          npm install --ignore-scripts
 
       - name: Commit scope rename
         run: |
