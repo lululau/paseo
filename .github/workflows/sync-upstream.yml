@@ -90,8 +90,9 @@ jobs:
           set -euo pipefail
           TAG="${{ needs.check-new-release.outputs.new_tag }}"
 
-          # Create branch from upstream tag
-          git checkout -b "$TAG" "tags/$TAG"
+          # Create branch from upstream tag (use release/ prefix to avoid conflict with tag name)
+          BRANCH="release/$TAG"
+          git checkout -b "$BRANCH" "tags/$TAG"
 
       - name: Cherry-pick model mapping commit
         run: |
@@ -133,28 +134,17 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${{ needs.check-new-release.outputs.new_tag }}"
+          BRANCH="release/$TAG"
 
           git remote add fork "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" || true
-          git push fork "$TAG"
-          git push fork "$TAG:$TAG" || true
+          git push fork "$BRANCH"
+          git push fork "$TAG:$TAG"
 
-      - name: Create failure issue on error
+      - name: Notify failure on error
         if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ needs.check-new-release.outputs.new_tag }}"
-          gh issue create \
-            --title "Upstream sync failed for $TAG" \
-            --body "Cherry-pick of model mapping commit ($CHERRY_PICK_COMMIT) conflicted with upstream tag $TAG.
-
-          ## Resolution steps
-          1. Locally: \`git fetch origin && git checkout -b fix-sync-$TAG origin/$TAG\`
-          2. Resolve conflicts manually
-          3. Run scope rename: \`find . -type f -not -path './.git/*' -not -path './node_modules/*' -exec sed -i 's/@getpaseo\//@lululau\/paseo-/g' {} +\`
-          4. \`npm install --package-lock-only && git add -A && git commit -m 'fix: resolve sync conflict for $TAG'\`
-          5. Push and re-tag" \
-            --repo "${{ github.repository }}"
+          echo "::error::Upstream sync failed for $TAG. Check logs for details."
 
   publish-npm:
     needs: create-version-branch
@@ -164,7 +154,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.check-new-release.outputs.new_tag }}
+          ref: release/${{ needs.check-new-release.outputs.new_tag }}
 
       - uses: actions/setup-node@v4
         with:
