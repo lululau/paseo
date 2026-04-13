@@ -69,7 +69,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      workflows: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -137,7 +136,7 @@ jobs:
           TAG="${{ needs.check-new-release.outputs.new_tag }}"
           BRANCH="release/$TAG"
 
-          git remote add fork "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" || true
+          git remote add fork "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git" || true
           git push fork "$BRANCH"
           git push fork "$TAG:$TAG"
 
