@@ -8,7 +8,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { Buffer } from "node:buffer";
 
 import { createTestPaseoDaemon } from "../test-utils/paseo-daemon.js";
-import { createClientChannel, type Transport } from "@getpaseo/relay/e2ee";
+import { createClientChannel, type Transport } from "@lululau/paseo-relay/e2ee";
 import { buildRelayWebSocketUrl } from "../../shared/daemon-endpoints.js";
 
 const nodeMajor = Number((process.versions.node ?? "0").split(".")[0] ?? "0");

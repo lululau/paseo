@@ -1,5 +1,5 @@
 {
-  "name": "@getpaseo/relay",
+  "name": "@lululau/paseo-relay",
   "version": "0.1.52",
   "description": "Paseo relay for bridging daemon and client connections",
   "type": "module",
@@ -28,7 +28,15 @@
       "node": "./dist/cloudflare-adapter.js",
       "import": "./src/cloudflare-adapter.ts",
       "default": "./src/cloudflare-adapter.ts"
+    },
+    "./node-server": {
+      "node": "./dist/node-server.js",
+      "import": "./src/node-server.ts",
+      "default": "./src/node-server.ts"
     }
+  },
+  "bin": {
+    "paseo-relay": "./dist/node-server.js"
   },
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{ recursive: true, force: true })\" && tsc -p tsconfig.json --incremental false",

@@ -2,8 +2,8 @@ import { Command } from "commander";
 import { connectToDaemon, getDaemonHost } from "../../utils/client.js";
 import type { CommandOptions } from "../../output/index.js";
 import { fetchProjectedTimelineItems } from "../../utils/timeline.js";
-import type { DaemonClient, AgentStreamMessage, AgentTimelineItem } from "@getpaseo/server";
-import { curateAgentActivity } from "@getpaseo/server";
+import type { DaemonClient, AgentStreamMessage, AgentTimelineItem } from "@lululau/paseo-server";
+import { curateAgentActivity } from "@lululau/paseo-server";
 
 export function addLogsOptions(cmd: Command): Command {
   return cmd

@@ -24,7 +24,7 @@ describe("resolveDaemonVersion", () => {
     const root = createTempDir();
     writeFileSync(
       path.join(root, "package.json"),
-      JSON.stringify({ name: "@getpaseo/server", version: "9.8.7" }),
+      JSON.stringify({ name: "@lululau/paseo-server", version: "9.8.7" }),
       "utf8",
     );
     const nestedDir = path.join(root, "dist", "server");
@@ -52,7 +52,7 @@ describe("resolveDaemonVersion", () => {
     const root = createTempDir();
     writeFileSync(
       path.join(root, "package.json"),
-      JSON.stringify({ name: "@getpaseo/server" }),
+      JSON.stringify({ name: "@lululau/paseo-server" }),
       "utf8",
     );
     const nestedDir = path.join(root, "dist", "server");
