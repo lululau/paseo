@@ -1,0 +1,201 @@
+name: Sync Upstream Release
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '指定要同步的上游 tag（如 v0.1.55）'
+        required: false
+        type: string
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: getpaseo/paseo
+  UPSTREAM_URL: https://github.com/getpaseo/paseo.git
+  FORK_REMOTE: lx
+  CHERRY_PICK_COMMIT: fa4621074a14a3a4e4c2b2353a9a7ddcddeb7731
+
+jobs:
+  check-new-release:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.check.outputs.new_tag }}
+      has_new: ${{ steps.check.outputs.has_new }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new upstream release
+        id: check
+        run: |
+          set -euo pipefail
+
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+            echo "Using manually specified tag: $TAG"
+          else
+            # Fetch all upstream tags
+            git fetch --tags "$UPSTREAM_URL"
+
+            # Get latest non-prerelease v* tag
+            TAG=$(git tag -l 'v*' --sort=-v:refname | grep -v -E '-(rc|alpha|beta)' | head -1)
+
+            if [ -z "$TAG" ]; then
+              echo "No upstream release tags found"
+              echo "has_new=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # Check if this tag already exists in our fork
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists in fork, skipping"
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New upstream release: $TAG"
+            echo "new_tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "has_new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  create-version-branch:
+    needs: check-new-release
+    if: needs.check-new-release.outputs.has_new == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream tag
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.check-new-release.outputs.new_tag }}"
+          git fetch --tags "$UPSTREAM_URL" "$TAG"
+
+      - name: Create version branch
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.check-new-release.outputs.new_tag }}"
+
+          # Create branch from upstream tag
+          git checkout -b "$TAG" "tags/$TAG"
+
+      - name: Cherry-pick model mapping commit
+        run: |
+          set -euo pipefail
+
+          if ! git cherry-pick "$CHERRY_PICK_COMMIT" --no-commit; then
+            echo "::error::Cherry-pick conflict detected! Manual resolution needed."
+            echo "Conflicting files:"
+            git diff --name-only --diff-filter=U
+            git cherry-pick --abort
+            exit 1
+          fi
+
+          git commit -m "feat: add model mapping support for Claude provider (cherry-picked from model-map-base)"
+
+      - name: Rename npm scope @getpaseo -> @lululau/paseo
+        run: |
+          set -euo pipefail
+          find . -type f \
+            -not -path './.git/*' \
+            -not -path './node_modules/*' \
+            -exec sed -i "s/@getpaseo\//@lululau\/paseo-/g" {} +
+
+      - name: Regenerate package-lock.json
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm install --package-lock-only
+
+      - name: Commit scope rename
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.check-new-release.outputs.new_tag }}"
+          git add -A
+          git commit -m "chore: rename scope @getpaseo -> @lululau/paseo for $TAG" || echo "No changes to commit"
+
+      - name: Push branch and tag
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.check-new-release.outputs.new_tag }}"
+
+          git remote add fork "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" || true
+          git push fork "$TAG"
+          git push fork "$TAG:$TAG" || true
+
+      - name: Create failure issue on error
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.check-new-release.outputs.new_tag }}"
+          gh issue create \
+            --title "Upstream sync failed for $TAG" \
+            --body "Cherry-pick of model mapping commit ($CHERRY_PICK_COMMIT) conflicted with upstream tag $TAG.
+
+          ## Resolution steps
+          1. Locally: \`git fetch origin && git checkout -b fix-sync-$TAG origin/$TAG\`
+          2. Resolve conflicts manually
+          3. Run scope rename: \`find . -type f -not -path './.git/*' -not -path './node_modules/*' -exec sed -i 's/@getpaseo\//@lululau\/paseo-/g' {} +\`
+          4. \`npm install --package-lock-only && git add -A && git commit -m 'fix: resolve sync conflict for $TAG'\`
+          5. Push and re-tag" \
+            --repo "${{ github.repository }}"
+
+  publish-npm:
+    needs: create-version-branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check-new-release.outputs.new_tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build daemon packages
+        run: npm run build:daemon
+
+      - name: Publish @lululau/paseo-highlight
+        run: npm publish --workspace=@lululau/paseo-highlight --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @lululau/paseo-relay
+        run: npm publish --workspace=@lululau/paseo-relay --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @lululau/paseo-server
+        run: npm publish --workspace=@lululau/paseo-server --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @lululau/paseo-cli
+        run: npm publish --workspace=@lululau/paseo-cli --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
