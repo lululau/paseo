@@ -101,8 +101,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@lululau'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install JS dependencies
         run: npm ci
@@ -277,8 +276,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@lululau'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install JS dependencies
         run: npm ci
@@ -344,8 +342,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@lululau'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install JS dependencies
         run: npm ci
