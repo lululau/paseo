@@ -99,14 +99,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install JS dependencies
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm install --ignore-scripts
 
       - name: Set desktop package version from tag
         shell: bash
@@ -274,14 +269,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install JS dependencies
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm install --ignore-scripts
 
       - name: Set desktop package version from tag
         shell: bash
@@ -340,14 +330,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install JS dependencies
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm install --ignore-scripts
 
       - name: Set desktop package version from tag
         shell: bash
