@@ -134,11 +134,14 @@ jobs:
           console.log('Patched build script:', pkg.scripts.build);
           "
 
-      - name: Regenerate package-lock.json
+      - name: Regenerate lockfile with correct registry
         uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: |
+          # Delete and regenerate lockfile. The upstream lockfile has resolved URLs
+          # pointing to npm.pkg.github.com/@boudra/ which doesn't exist for @lululau.
+          # npm install --ignore-scripts will resolve from npmjs.org (the default).
           rm -f package-lock.json
           npm install --ignore-scripts
 
@@ -167,7 +170,7 @@ jobs:
 
   publish-npm:
     needs: create-version-branch
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     permissions:
       contents: read
       actions: write
@@ -179,19 +182,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@lululau'
 
       - name: Install dependencies
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm install
 
-      - name: Build daemon packages
-        env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
-        run: npm run build:daemon
+      - name: Build daemon packages (each in separate process to avoid OOM)
+        run: |
+          npm run build --workspace=@lululau/paseo-highlight
+          npm run build --workspace=@lululau/paseo-relay
+          npm run build --workspace=@lululau/paseo-server
+          npm run build --workspace=@lululau/paseo-cli
 
       - name: Switch registry for publishing
         run: |
