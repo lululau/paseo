@@ -133,6 +133,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_GH_IGNORE_TIME: true
+          NODE_OPTIONS: '--max-old-space-size=4096'
           CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -309,6 +310,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_GH_IGNORE_TIME: true
+          NODE_OPTIONS: '--max-old-space-size=4096'
         run: |
           set -euo pipefail
           publish_mode="never"
@@ -384,6 +386,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_GH_IGNORE_TIME: true
+          NODE_OPTIONS: '--max-old-space-size=4096'
         run: |
           set -euo pipefail
           publish_mode="never"
