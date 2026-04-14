@@ -119,6 +119,21 @@ jobs:
             -not -path './.github/workflows/*' \
             -exec sed -i "s/@getpaseo\//@lululau\/paseo-/g" {} +
 
+      - name: Patch desktop build to reduce memory pressure
+        run: |
+          set -euo pipefail
+          # Split desktop build: daemon packages are built separately in desktop-release workflow
+          # with increased heap, so remove build:daemon from the desktop build script to avoid OOM
+          DESKTOP_PKG="packages/desktop/package.json"
+          node -e "
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('$DESKTOP_PKG', 'utf8'));
+          // Remove 'npm --prefix ../.. run build:daemon && ' prefix from build script
+          pkg.scripts.build = pkg.scripts.build.replace('npm --prefix ../.. run build:daemon && ', '');
+          fs.writeFileSync('$DESKTOP_PKG', JSON.stringify(pkg, null, 2) + '\n');
+          console.log('Patched build script:', pkg.scripts.build);
+          "
+
       - name: Regenerate package-lock.json
         uses: actions/setup-node@v4
         with:
@@ -165,15 +180,25 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@lululau'
 
       - name: Install dependencies
         run: npm ci
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build daemon packages
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
         run: npm run build:daemon
+
+      - name: Switch registry for publishing
+        run: |
+          # .npmrc was set to npm.pkg.github.com by setup-node for install.
+          # Switch to npmjs.org for publishing (token comes from NPM_TOKEN secret).
+          echo "@lululau:registry=https://registry.npmjs.org/" > .npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
 
       - name: Publish @lululau/paseo-highlight
         run: npm publish --workspace=@lululau/paseo-highlight --access public
