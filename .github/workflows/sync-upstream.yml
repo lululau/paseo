@@ -119,30 +119,15 @@ jobs:
             -not -path './.github/workflows/*' \
             -exec sed -i "s/@getpaseo\//@lululau\/paseo-/g" {} +
 
-      - name: Patch desktop build to reduce memory pressure
-        run: |
-          set -euo pipefail
-          # Split desktop build: daemon packages are built separately in desktop-release workflow
-          # with increased heap, so remove build:daemon from the desktop build script to avoid OOM
-          DESKTOP_PKG="packages/desktop/package.json"
-          node -e "
-          const fs = require('fs');
-          const pkg = JSON.parse(fs.readFileSync('$DESKTOP_PKG', 'utf8'));
-          // Remove 'npm --prefix ../.. run build:daemon && ' prefix from build script
-          pkg.scripts.build = pkg.scripts.build.replace('npm --prefix ../.. run build:daemon && ', '');
-          fs.writeFileSync('$DESKTOP_PKG', JSON.stringify(pkg, null, 2) + '\n');
-          console.log('Patched build script:', pkg.scripts.build);
-          "
-
-      - name: Regenerate lockfile with correct registry
+      - name: Install dependencies (reuse upstream lockfile)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: |
-          # Delete and regenerate lockfile. The upstream lockfile has resolved URLs
-          # pointing to npm.pkg.github.com/@boudra/ which doesn't exist for @lululau.
-          # npm install --ignore-scripts will resolve from npmjs.org (the default).
-          rm -f package-lock.json
+          # The sed above replaced @getpaseo -> @lululau/paseo- in both package.json
+          # and package-lock.json. The upstream lockfile has all resolved URLs pointing
+          # to npmjs.org already, so we keep it to get the exact same dependency tree.
+          # npm install will update integrity hashes for workspace packages only.
           npm install --ignore-scripts
 
       - name: Commit scope rename
@@ -182,9 +167,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build daemon packages (each in separate process to avoid OOM)
         run: |
@@ -195,8 +182,6 @@ jobs:
 
       - name: Switch registry for publishing
         run: |
-          # .npmrc was set to npm.pkg.github.com by setup-node for install.
-          # Switch to npmjs.org for publishing (token comes from NPM_TOKEN secret).
           echo "@lululau:registry=https://registry.npmjs.org/" > .npmrc
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
 
@@ -223,12 +208,3 @@ jobs:
         continue-on-error: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Trigger desktop release build
-        if: always() && needs.create-version-branch.result == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh workflow run desktop-release.yml \
-            -f tag="${{ needs.create-version-branch.outputs.new_tag }}" \
-            --ref main

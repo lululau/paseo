@@ -128,11 +128,6 @@ jobs:
       - name: Build web app for desktop
         run: npm run build:web --workspace=@lululau/paseo-app
 
-      - name: Build daemon packages
-        env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
-        run: npm run build:daemon
-
       - name: Build desktop release
         shell: bash
         env:
@@ -310,11 +305,6 @@ jobs:
       - name: Build web app for desktop
         run: npm run build:web --workspace=@lululau/paseo-app
 
-      - name: Build daemon packages
-        env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
-        run: npm run build:daemon
-
       - name: Build desktop release
         shell: bash
         env:
@@ -390,11 +380,6 @@ jobs:
           $env:NODE_OPTIONS = "--require=$patchPath"
           npx expo export --platform web
         working-directory: packages/app
-
-      - name: Build daemon packages
-        env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
-        run: npm run build:daemon
 
       - name: Build desktop release
         shell: bash

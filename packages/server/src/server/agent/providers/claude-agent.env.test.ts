@@ -95,34 +95,32 @@ describe("Claude agent env", () => {
         "claude-sonnet-4-6": "qwen3.5-plus",
       },
     };
-    const queryFactory = vi.fn(
-      ({ options }: { options: { model?: string } }) => {
-        capturedModel = options.model;
-        return createQueryMock([
-          {
-            type: "system",
-            subtype: "init",
-            session_id: "modelmap-session",
-            permissionMode: "default",
-            model: "qwen3.6-plus",
+    const queryFactory = vi.fn(({ options }: { options: { model?: string } }) => {
+      capturedModel = options.model;
+      return createQueryMock([
+        {
+          type: "system",
+          subtype: "init",
+          session_id: "modelmap-session",
+          permissionMode: "default",
+          model: "qwen3.6-plus",
+        },
+        {
+          type: "assistant",
+          message: { content: "done" },
+        },
+        {
+          type: "result",
+          subtype: "success",
+          usage: {
+            input_tokens: 1,
+            cache_read_input_tokens: 0,
+            output_tokens: 1,
           },
-          {
-            type: "assistant",
-            message: { content: "done" },
-          },
-          {
-            type: "result",
-            subtype: "success",
-            usage: {
-              input_tokens: 1,
-              cache_read_input_tokens: 0,
-              output_tokens: 1,
-            },
-            total_cost_usd: 0,
-          },
-        ]);
-      },
-    );
+          total_cost_usd: 0,
+        },
+      ]);
+    });
 
     const client = new ClaudeAgentClient({
       logger: createTestLogger(),
@@ -145,34 +143,32 @@ describe("Claude agent env", () => {
 
   test("passes model as-is when no modelMap is configured", async () => {
     let capturedModel: string | undefined;
-    const queryFactory = vi.fn(
-      ({ options }: { options: { model?: string } }) => {
-        capturedModel = options.model;
-        return createQueryMock([
-          {
-            type: "system",
-            subtype: "init",
-            session_id: "no-modelmap-session",
-            permissionMode: "default",
-            model: "claude-opus-4-6",
+    const queryFactory = vi.fn(({ options }: { options: { model?: string } }) => {
+      capturedModel = options.model;
+      return createQueryMock([
+        {
+          type: "system",
+          subtype: "init",
+          session_id: "no-modelmap-session",
+          permissionMode: "default",
+          model: "claude-opus-4-6",
+        },
+        {
+          type: "assistant",
+          message: { content: "done" },
+        },
+        {
+          type: "result",
+          subtype: "success",
+          usage: {
+            input_tokens: 1,
+            cache_read_input_tokens: 0,
+            output_tokens: 1,
           },
-          {
-            type: "assistant",
-            message: { content: "done" },
-          },
-          {
-            type: "result",
-            subtype: "success",
-            usage: {
-              input_tokens: 1,
-              cache_read_input_tokens: 0,
-              output_tokens: 1,
-            },
-            total_cost_usd: 0,
-          },
-        ]);
-      },
-    );
+          total_cost_usd: 0,
+        },
+      ]);
+    });
 
     const client = new ClaudeAgentClient({
       logger: createTestLogger(),
@@ -224,7 +220,9 @@ describe("Claude agent env", () => {
           total_cost_usd: 0,
         },
       ]);
-      mock.setModel = vi.fn(async (m?: string) => { setModelArg = m; });
+      mock.setModel = vi.fn(async (m?: string) => {
+        setModelArg = m;
+      });
       return mock;
     });
 

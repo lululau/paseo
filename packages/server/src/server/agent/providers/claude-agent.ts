@@ -1638,7 +1638,8 @@ class ClaudeAgentSession implements AgentSession {
   async setModel(modelId: string | null): Promise<void> {
     const normalizedModelId =
       typeof modelId === "string" && modelId.trim().length > 0 ? modelId : null;
-    const mappedModelId = resolveModelViaMap(normalizedModelId, this.runtimeSettings?.modelMap) ?? normalizedModelId;
+    const mappedModelId =
+      resolveModelViaMap(normalizedModelId, this.runtimeSettings?.modelMap) ?? normalizedModelId;
     const query = await this.ensureQuery();
     await query.setModel(mappedModelId ?? undefined);
     this.config.model = normalizedModelId ?? undefined;
@@ -2147,7 +2148,8 @@ class ClaudeAgentSession implements AgentSession {
     }
 
     if (this.config.model) {
-      base.model = resolveModelViaMap(this.config.model, this.runtimeSettings?.modelMap) ?? this.config.model;
+      base.model =
+        resolveModelViaMap(this.config.model, this.runtimeSettings?.modelMap) ?? this.config.model;
     }
     this.lastOptionsModel = this.config.model ?? null;
     if (this.claudeSessionId) {
@@ -2938,7 +2940,10 @@ class ClaudeAgentSession implements AgentSession {
     this.persistence = null;
     if (message.model) {
       const normalizedRuntimeModel = normalizeClaudeRuntimeModelId(message.model);
-      const reverseMapped = reverseResolveModelViaMap(message.model, this.runtimeSettings?.modelMap);
+      const reverseMapped = reverseResolveModelViaMap(
+        message.model,
+        this.runtimeSettings?.modelMap,
+      );
       this.logger.debug(
         { runtimeModel: message.model, normalizedRuntimeModel, reverseMapped },
         "Captured runtime model from SDK init",

@@ -5876,7 +5876,11 @@ export class Session {
       };
 
       const lastEmitted = subscription.lastEmittedByWorkspaceId.get(workspaceId);
-      if (lastEmitted && lastEmitted.kind === "upsert" && equal(lastEmitted.workspace, nextWorkspace)) {
+      if (
+        lastEmitted &&
+        lastEmitted.kind === "upsert" &&
+        equal(lastEmitted.workspace, nextWorkspace)
+      ) {
         continue;
       }
 
