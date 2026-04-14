@@ -42,20 +42,20 @@ Check `$PASEO_HOME/daemon.log` for trace-level logs.
 When changing `packages/relay/src/*`, rebuild before running the daemon:
 
 ```bash
-npm run build --workspace=@getpaseo/relay
+npm run build --workspace=@lululau/paseo-relay
 ```
 
-The Node daemon imports `@getpaseo/relay` from `packages/relay/dist/*`, not `src/*`.
+The Node daemon imports `@lululau/paseo-relay` from `packages/relay/dist/*`, not `src/*`.
 
 ### Server → CLI
 
 When changing `packages/server/src/client/*` (especially `daemon-client.ts`) or shared WS protocol types, rebuild before running CLI commands:
 
 ```bash
-npm run build --workspace=@getpaseo/server
+npm run build --workspace=@lululau/paseo-server
 ```
 
-The CLI imports `@getpaseo/server` via package exports resolving to `dist/*`. Stale `dist` means the CLI speaks an old protocol and fails with handshake warnings or timeouts.
+The CLI imports `@lululau/paseo-server` via package exports resolving to `dist/*`. Stale `dist` means the CLI speaks an old protocol and fails with handshake warnings or timeouts.
 
 ## CLI reference
 

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { loadConfig, resolvePaseoHome, DaemonClient } from "@getpaseo/server";
+import { loadConfig, resolvePaseoHome, DaemonClient } from "@lululau/paseo-server";
 import path from "node:path";
 import WebSocket from "ws";
 import { getOrCreateCliClientId } from "./client-id.js";

@@ -2,7 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { loadConfig, resolvePaseoHome } from "@getpaseo/server";
+import { loadConfig, resolvePaseoHome } from "@lululau/paseo-server";
 import { tryConnectToDaemon } from "../../utils/client.js";
 
 export interface DaemonStartOptions {
@@ -120,7 +120,7 @@ function buildChildEnv(options: DaemonStartOptions): NodeJS.ProcessEnv {
 }
 
 function resolveDaemonRunnerEntry(): string {
-  const serverExportPath = require.resolve("@getpaseo/server");
+  const serverExportPath = require.resolve("@lululau/paseo-server");
   let currentDir = path.dirname(serverExportPath);
 
   while (true) {
@@ -128,7 +128,7 @@ function resolveDaemonRunnerEntry(): string {
     if (existsSync(packageJsonPath)) {
       try {
         const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8")) as { name?: string };
-        if (packageJson.name === "@getpaseo/server") {
+        if (packageJson.name === "@lululau/paseo-server") {
           const distRunner = path.join(currentDir, "dist", "scripts", "supervisor-entrypoint.js");
           if (existsSync(distRunner)) {
             return distRunner;
@@ -147,7 +147,7 @@ function resolveDaemonRunnerEntry(): string {
     currentDir = parentDir;
   }
 
-  throw new Error("Unable to resolve @getpaseo/server package root for daemon runner");
+  throw new Error("Unable to resolve @lululau/paseo-server package root for daemon runner");
 }
 
 function pidFilePath(paseoHome: string): string {

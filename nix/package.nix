@@ -87,9 +87,9 @@ buildNpmPackage rec {
     # Copy node_modules (preserving workspace symlinks)
     cp -a node_modules $out/lib/paseo/
 
-    # Auto-detect which @getpaseo/* packages were built by build:daemon
+    # Auto-detect which @lululau/paseo-* packages were built by build:daemon
     # (they'll have a dist/ directory). Copy those and remove the rest.
-    for link in $out/lib/paseo/node_modules/@getpaseo/*; do
+    for link in $out/lib/paseo/node_modules/@lululau/paseo-*; do
       name=$(basename "$link")
       if [ -d "packages/$name/dist" ]; then
         mkdir -p "$out/lib/paseo/packages/$name"

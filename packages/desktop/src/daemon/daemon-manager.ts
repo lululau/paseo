@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { app, ipcMain } from "electron";
 import log from "electron-log/main";
-import { resolvePaseoHome, spawnProcess } from "@getpaseo/server";
+import { resolvePaseoHome, spawnProcess } from "@lululau/paseo-server";
 import {
   copyAttachmentFileToManagedStorage,
   deleteManagedAttachmentFile,

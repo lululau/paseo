@@ -1,5 +1,5 @@
 {
-  "name": "@getpaseo/relay",
+  "name": "@lululau/paseo-relay",
   "version": "0.1.54",
   "description": "Paseo relay for bridging daemon and client connections",
   "type": "module",

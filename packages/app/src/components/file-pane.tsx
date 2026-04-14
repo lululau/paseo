@@ -19,7 +19,7 @@ import {
   lightHighlightColors,
   type HighlightToken,
   type HighlightStyle,
-} from "@getpaseo/highlight";
+} from "@lululau/paseo-highlight";
 import { lineNumberGutterWidth } from "@/components/code-insets";
 
 interface CodeLineProps {

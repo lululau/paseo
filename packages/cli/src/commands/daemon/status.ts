@@ -2,7 +2,7 @@ import type { Command } from "commander";
 import { execFile } from "node:child_process";
 import { createRequire } from "node:module";
 import { promisify } from "node:util";
-import { getOrCreateServerId, findExecutable, applyProviderEnv } from "@getpaseo/server";
+import { getOrCreateServerId, findExecutable, applyProviderEnv } from "@lululau/paseo-server";
 
 const execFileAsync = promisify(execFile);
 import { tryConnectToDaemon } from "../../utils/client.js";

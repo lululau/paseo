@@ -1,5 +1,5 @@
 {
-  "name": "@getpaseo/expo-two-way-audio",
+  "name": "@lululau/paseo-expo-two-way-audio",
   "version": "0.1.54",
   "description": "Native module for two way audio streaming",
   "main": "build/index.js",

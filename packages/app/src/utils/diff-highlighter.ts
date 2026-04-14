@@ -1,4 +1,4 @@
-import { highlightCode, isLanguageSupported, type HighlightToken } from "@getpaseo/highlight";
+import { highlightCode, isLanguageSupported, type HighlightToken } from "@lululau/paseo-highlight";
 
 export interface DiffLine {
   type: "add" | "remove" | "context" | "header";
